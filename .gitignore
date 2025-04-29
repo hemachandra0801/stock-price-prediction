@@ -1,7 +1,8 @@
 /.venv
 /stock_data
 /models
-combined_stocks_wide_csv
+combined_stocks_wide.csv
 /mlruns
 training_history.csv
+/scalers
 

@@ -102,11 +102,11 @@ stock_list = data['Stocks']
 tickers = stock_list
 print(f"Top 50 tickers: {tickers}")
 
-# # Download data (default 1 year history)
-# stock_data = download_stock_data(tickers)
+# Download data (default 1 year history)
+stock_data = download_stock_data(tickers)
 
-# # Save to CSV
-# save_to_csv(stock_data)
+# Save to CSV
+save_to_csv(stock_data)
 combined_data = combine_stock_data(
         input_folder='stock_data',
         output_file='combined_stocks_wide.csv'

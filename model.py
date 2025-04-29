@@ -6,32 +6,55 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import Dataset, DataLoader, random_split
 
+import os
+import joblib
+
+
 class StockDataset(Dataset):
-    def __init__(self, data, sequence_length=30):
+    def __init__(self, data, sequence_length=30, scalers_dir="scalers"):
         """
         Args:
             data: Path to CSV or DataFrame
             sequence_length: Length of input sequences
+            scalers_dir: Directory to save/load scalers (None to not save)
         """
-           
+        if isinstance(data, str):
+            self.data = pd.read_csv(data, index_col='Date', parse_dates=True)
+        else:
+            self.data = data
+            
         self.seq_len = sequence_length
-        self.scalers = {}  # Store scalers per stock
-        self.prepare_data()
+        self.scalers_dir = scalers_dir
+        self.scalers = {}
+        self._prepare_data()
         
-    def prepare_data(self):
-        # Get number of stocks (4 features per stock)
+    def _prepare_data(self):
         n_features = 4
         n_stocks = self.data.shape[1] // n_features
-        
-        # Reshape and scale
         data_values = self.data.values
         self.scaled_data = np.zeros((len(self.data), n_stocks, n_features))
         
+        # Try loading existing scalers first
+        if self.scalers_dir and os.path.exists(self.scalers_dir):
+            for i in range(n_stocks):
+                scaler_path = os.path.join(self.scalers_dir, f'scaler_{i}.pkl')
+                if os.path.exists(scaler_path):
+                    self.scalers[i] = joblib.load(scaler_path)
+        
+        # Fit new scalers for any remaining stocks
         for i in range(n_stocks):
             stock_data = data_values[:, i*n_features:(i+1)*n_features]
-            self.scalers[i] = MinMaxScaler(feature_range=(-1, 1))
-            self.scaled_data[:, i, :] = self.scalers[i].fit_transform(stock_data)
-            
+            if i not in self.scalers:
+                self.scalers[i] = MinMaxScaler(feature_range=(-1, 1))
+                self.scalers[i].fit(stock_data)
+            self.scaled_data[:, i, :] = self.scalers[i].transform(stock_data)
+        
+        # Save scalers if directory specified
+        if self.scalers_dir:
+            os.makedirs(self.scalers_dir, exist_ok=True)
+            for i, scaler in self.scalers.items():
+                joblib.dump(scaler, os.path.join(self.scalers_dir, f'scaler_{i}.pkl'))
+                
     def __len__(self):
         return len(self.data) - self.seq_len
         
@@ -59,36 +82,36 @@ def get_dataloaders(data_path, sequence_length=30, batch_size=32, split_ratio=0.
 
 
 
-# 1. Data Preparation
-class StockDataset(Dataset):
-    def __init__(self, data, sequence_length=30):
-        self.data = data
-        self.seq_len = sequence_length
-        self.scaler = MinMaxScaler(feature_range=(-1, 1))
-        self.prepare_data()
+# # 1. Data Preparation
+# class StockDataset(Dataset):
+#     def __init__(self, data, sequence_length=30):
+#         self.data = data
+#         self.seq_len = sequence_length
+#         self.scaler = MinMaxScaler(feature_range=(-1, 1))
+#         self.prepare_data()
         
         
-    def prepare_data(self):
-        # Reshape data: [n_days, n_stocks*4] -> [n_stocks, n_days, 4]
-        n_stocks = 50
-        n_features = 4
-        data_3d = self.data.values.reshape(-1, n_stocks, n_features)
+#     def prepare_data(self):
+#         # Reshape data: [n_days, n_stocks*4] -> [n_stocks, n_days, 4]
+#         n_stocks = 50
+#         n_features = 4
+#         data_3d = self.data.values.reshape(-1, n_stocks, n_features)
         
-        # Scale each stock's features independently
-        self.scaled_data = np.zeros_like(data_3d)
-        for i in range(n_stocks):
-            self.scaled_data[:, i, :] = self.scaler.fit_transform(data_3d[:, i, :])
+#         # Scale each stock's features independently
+#         self.scaled_data = np.zeros_like(data_3d)
+#         for i in range(n_stocks):
+#             self.scaled_data[:, i, :] = self.scaler.fit_transform(data_3d[:, i, :])
         
-    def __len__(self):
-        return len(self.data) - self.seq_len
+#     def __len__(self):
+#         return len(self.data) - self.seq_len
         
-    def __getitem__(self, idx):
-        # Input: [50 stocks, 30 days, 4 features]
-        x = self.scaled_data[idx:idx+self.seq_len]
-        # Output: [50 stocks, 1 day, 4 features]
-        y = self.scaled_data[idx+self.seq_len]
+#     def __getitem__(self, idx):
+#         # Input: [50 stocks, 30 days, 4 features]
+#         x = self.scaled_data[idx:idx+self.seq_len]
+#         # Output: [50 stocks, 1 day, 4 features]
+#         y = self.scaled_data[idx+self.seq_len]
         
-        return torch.FloatTensor(x), torch.FloatTensor(y)
+#         return torch.FloatTensor(x), torch.FloatTensor(y)
 
 
 class MultiStockLSTM(nn.Module):

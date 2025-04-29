@@ -2,4 +2,6 @@
 /stock_data
 /models
 combined_stocks_wide_csv
+/mlruns
+training_history.csv
 

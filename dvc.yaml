@@ -1,6 +1,4 @@
 stages:
-  
-
   fetch:
     cmd: |
       python pipeline.py fetch
@@ -15,6 +13,7 @@ stages:
     cmd: |
       python pipeline.py predict
     deps:
+      - mlruns/models
       - pipeline.py
       - predict.py
       - dataeng.py

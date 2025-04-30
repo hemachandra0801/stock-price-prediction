@@ -7,8 +7,8 @@ stages:
     deps:
     - path: fetchdata.py
       hash: md5
-      md5: 38cd47987a1e58c81524cb302b7bddcc
-      size: 96
+      md5: 0c599c3216b4a6d824b8ab4fb42a7d88
+      size: 95
     - path: pipeline.py
       hash: md5
       md5: 1f0743b1b348c7e443c565e7f0eba6a6
@@ -16,7 +16,7 @@ stages:
     outs:
     - path: data/raw/
       hash: md5
-      md5: e1d864acf7657b41ea1175d335a7c246.dir
+      md5: 0d8cc391b60df57495302b3a2e264525.dir
       size: 25605
       nfiles: 1
   predict:
@@ -24,13 +24,18 @@ stages:
     deps:
     - path: data/raw/
       hash: md5
-      md5: e1d864acf7657b41ea1175d335a7c246.dir
+      md5: 0d8cc391b60df57495302b3a2e264525.dir
       size: 25605
       nfiles: 1
     - path: dataeng.py
       hash: md5
       md5: d3b22e6c79ca32562047b14c81b28d35
       size: 2396
+    - path: mlruns/models
+      hash: md5
+      md5: f9364fe5b3b15cc8106bfde86be8ad71.dir
+      size: 10720
+      nfiles: 21
     - path: model.py
       hash: md5
       md5: 0e2bbc2bf1a760786c8753d4392376d1
@@ -46,6 +51,6 @@ stages:
     outs:
     - path: data/processed/
       hash: md5
-      md5: a714e46d33a6448f0f2e87a6fa4d9492.dir
+      md5: cb179d831473502aa36e1e678e6f2859.dir
       size: 2565
       nfiles: 1

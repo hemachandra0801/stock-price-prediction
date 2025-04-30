@@ -1,17 +1,29 @@
 stages:
+  
+
   fetch:
-    cmd: python pipeline.py fetch
+    cmd: |
+      python pipeline.py fetch
     deps:
+      - pipeline.py
       - fetchdata.py
     outs:
-      - data/raw/latest_data.pt
+      - ${data_dir}/raw/
+    
 
   predict:
-    cmd: python pipeline.py predict
+    cmd: |
+      python pipeline.py predict
     deps:
+      - pipeline.py
       - predict.py
       - dataeng.py
       - model.py
-      - data/raw/latest_data.pt
+      - ${data_dir}/raw/
     outs:
-      - data/processed/predictions.pt
+      - ${data_dir}/processed/
+
+
+vars:
+  - data_dir: "data"
+  - reports_dir: "reports"

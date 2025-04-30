@@ -1,0 +1,51 @@
+schema: '2.0'
+stages:
+  init:
+    cmd: "mkdir -p data/raw/ reports data/processed/\n"
+  fetch:
+    cmd: "python pipeline.py fetch\n"
+    deps:
+    - path: fetchdata.py
+      hash: md5
+      md5: 38cd47987a1e58c81524cb302b7bddcc
+      size: 96
+    - path: pipeline.py
+      hash: md5
+      md5: 1f0743b1b348c7e443c565e7f0eba6a6
+      size: 873
+    outs:
+    - path: data/raw/
+      hash: md5
+      md5: e1d864acf7657b41ea1175d335a7c246.dir
+      size: 25605
+      nfiles: 1
+  predict:
+    cmd: "python pipeline.py predict\n"
+    deps:
+    - path: data/raw/
+      hash: md5
+      md5: e1d864acf7657b41ea1175d335a7c246.dir
+      size: 25605
+      nfiles: 1
+    - path: dataeng.py
+      hash: md5
+      md5: d3b22e6c79ca32562047b14c81b28d35
+      size: 2396
+    - path: model.py
+      hash: md5
+      md5: 0e2bbc2bf1a760786c8753d4392376d1
+      size: 9694
+    - path: pipeline.py
+      hash: md5
+      md5: 1f0743b1b348c7e443c565e7f0eba6a6
+      size: 873
+    - path: predict.py
+      hash: md5
+      md5: 427e146049a0410e710e1b4e58ab3415
+      size: 1095
+    outs:
+    - path: data/processed/
+      hash: md5
+      md5: a714e46d33a6448f0f2e87a6fa4d9492.dir
+      size: 2565
+      nfiles: 1

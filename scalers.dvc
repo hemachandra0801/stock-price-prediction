@@ -1,0 +1,6 @@
+outs:
+- md5: dff5243a45f4a363a6bcf3c0f99f3e74.dir
+  size: 41150
+  nfiles: 50
+  hash: md5
+  path: scalers

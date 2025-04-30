@@ -5,4 +5,5 @@ combined_stocks_wide.csv
 /mlruns
 training_history.csv
 /scalers
-
+/data
+/dvc_remote

@@ -1,0 +1,17 @@
+stages:
+  fetch:
+    cmd: python pipeline.py fetch
+    deps:
+      - fetchdata.py
+    outs:
+      - data/raw/latest_data.pt
+
+  predict:
+    cmd: python pipeline.py predict
+    deps:
+      - predict.py
+      - dataeng.py
+      - model.py
+      - data/raw/latest_data.pt
+    outs:
+      - data/processed/predictions.pt

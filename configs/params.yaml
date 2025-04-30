@@ -1,0 +1,7 @@
+fetch:
+  num_stocks: 50
+  days: 30
+  
+predict:
+  model_name: "bidirectional_lstm"
+  scalers_dir: "scalers"

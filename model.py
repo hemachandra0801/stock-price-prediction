@@ -1,82 +1,82 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-from torch.utils.data import Dataset, DataLoader, random_split
+# import numpy as np
+# import pandas as pd
+# from sklearn.preprocessing import MinMaxScaler
+# from torch.utils.data import Dataset, DataLoader, random_split
 
-import os
-import joblib
+# import os
+# import joblib
 
 
-class StockDataset(Dataset):
-    def __init__(self, data, sequence_length=30, scalers_dir="scalers"):
-        """
-        Args:
-            data: Path to CSV or DataFrame
-            sequence_length: Length of input sequences
-            scalers_dir: Directory to save/load scalers (None to not save)
-        """
-        if isinstance(data, str):
-            self.data = pd.read_csv(data, index_col='Date', parse_dates=True)
-        else:
-            self.data = data
+# class StockDataset(Dataset):
+#     def __init__(self, data, sequence_length=30, scalers_dir="scalers"):
+#         """
+#         Args:
+#             data: Path to CSV or DataFrame
+#             sequence_length: Length of input sequences
+#             scalers_dir: Directory to save/load scalers (None to not save)
+#         """
+#         if isinstance(data, str):
+#             self.data = pd.read_csv(data, index_col='Date', parse_dates=True)
+#         else:
+#             self.data = data
             
-        self.seq_len = sequence_length
-        self.scalers_dir = scalers_dir
-        self.scalers = {}
-        self._prepare_data()
+#         self.seq_len = sequence_length
+#         self.scalers_dir = scalers_dir
+#         self.scalers = {}
+#         self._prepare_data()
         
-    def _prepare_data(self):
-        n_features = 4
-        n_stocks = self.data.shape[1] // n_features
-        data_values = self.data.values
-        self.scaled_data = np.zeros((len(self.data), n_stocks, n_features))
+#     def _prepare_data(self):
+#         n_features = 4
+#         n_stocks = self.data.shape[1] // n_features
+#         data_values = self.data.values
+#         self.scaled_data = np.zeros((len(self.data), n_stocks, n_features))
         
-        # Try loading existing scalers first
-        if self.scalers_dir and os.path.exists(self.scalers_dir):
-            for i in range(n_stocks):
-                scaler_path = os.path.join(self.scalers_dir, f'scaler_{i}.pkl')
-                if os.path.exists(scaler_path):
-                    self.scalers[i] = joblib.load(scaler_path)
+#         # Try loading existing scalers first
+#         if self.scalers_dir and os.path.exists(self.scalers_dir):
+#             for i in range(n_stocks):
+#                 scaler_path = os.path.join(self.scalers_dir, f'scaler_{i}.pkl')
+#                 if os.path.exists(scaler_path):
+#                     self.scalers[i] = joblib.load(scaler_path)
         
-        # Fit new scalers for any remaining stocks
-        for i in range(n_stocks):
-            stock_data = data_values[:, i*n_features:(i+1)*n_features]
-            if i not in self.scalers:
-                self.scalers[i] = MinMaxScaler(feature_range=(-1, 1))
-                self.scalers[i].fit(stock_data)
-            self.scaled_data[:, i, :] = self.scalers[i].transform(stock_data)
+#         # Fit new scalers for any remaining stocks
+#         for i in range(n_stocks):
+#             stock_data = data_values[:, i*n_features:(i+1)*n_features]
+#             if i not in self.scalers:
+#                 self.scalers[i] = MinMaxScaler(feature_range=(-1, 1))
+#                 self.scalers[i].fit(stock_data)
+#             self.scaled_data[:, i, :] = self.scalers[i].transform(stock_data)
         
-        # Save scalers if directory specified
-        if self.scalers_dir:
-            os.makedirs(self.scalers_dir, exist_ok=True)
-            for i, scaler in self.scalers.items():
-                joblib.dump(scaler, os.path.join(self.scalers_dir, f'scaler_{i}.pkl'))
+#         # Save scalers if directory specified
+#         if self.scalers_dir:
+#             os.makedirs(self.scalers_dir, exist_ok=True)
+#             for i, scaler in self.scalers.items():
+#                 joblib.dump(scaler, os.path.join(self.scalers_dir, f'scaler_{i}.pkl'))
                 
-    def __len__(self):
-        return len(self.data) - self.seq_len
+#     def __len__(self):
+#         return len(self.data) - self.seq_len
         
-    def __getitem__(self, idx):
-        x = self.scaled_data[idx:idx+self.seq_len]  # [seq_len, n_stocks, 4]
-        y = self.scaled_data[idx+self.seq_len]      # [n_stocks, 4]
-        return torch.FloatTensor(x), torch.FloatTensor(y)
+#     def __getitem__(self, idx):
+#         x = self.scaled_data[idx:idx+self.seq_len]  # [seq_len, n_stocks, 4]
+#         y = self.scaled_data[idx+self.seq_len]      # [n_stocks, 4]
+#         return torch.FloatTensor(x), torch.FloatTensor(y)
 
-def get_dataloaders(data_path, sequence_length=30, batch_size=32, split_ratio=0.8):
-    df = pd.read_csv(data_path, index_col='Date', parse_dates=True)
-    dataset = StockDataset(df, sequence_length)
+# def get_dataloaders(data_path, sequence_length=30, batch_size=32, split_ratio=0.8):
+#     df = pd.read_csv(data_path, index_col='Date', parse_dates=True)
+#     dataset = StockDataset(df, sequence_length)
     
-    # Split dataset
-    train_size = int(len(dataset) * split_ratio)
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+#     # Split dataset
+#     train_size = int(len(dataset) * split_ratio)
+#     val_size = len(dataset) - train_size
+#     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
     
-    # Create dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+#     # Create dataloaders
+#     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+#     val_loader = DataLoader(val_dataset, batch_size=batch_size)
     
-    return train_loader, val_loader
+#     return train_loader, val_loader
 
 
 
@@ -279,3 +279,4 @@ def train_model(model, train_loader, val_loader, config):
 #     # Initialize and train model
 #     model = MultiStockLSTM(**model_config)
 #     model, history = train_model(model, train_loader, val_loader, training_config)
+

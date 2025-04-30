@@ -1,7 +1,8 @@
 import mlflow
 import mlflow.pytorch
 from datetime import datetime
-from model import get_dataloaders, MultiStockLSTM, train_model
+from model import MultiStockLSTM, train_model
+from loader import get_dataloaders
 import pandas as pd
 import mlflow
 from mlflow.models.signature import infer_signature
@@ -24,11 +25,7 @@ def run_experiment(experiment_name, model_config, training_config):
         })
         
         # Get data loaders
-        train_loader, val_loader = get_dataloaders(
-            "combined_stocks_wide.csv",
-            sequence_length=training_config['sequence_length'],
-            batch_size=training_config['batch_size']
-        )
+        train_loader, val_loader = get_dataloaders()
         
         # Initialize model and move to device
         model = MultiStockLSTM(**model_config).to(device)

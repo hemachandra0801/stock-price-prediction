@@ -34,12 +34,12 @@ class StockDataset(Dataset):
         return asyncio.get_event_loop().run_until_complete(self._load_from_db_async())
 
     async def _load_from_db_async(self):
-        """Actual async database query"""
+        """Actual async database query using stock_id"""
         conn = await asyncpg.connect(DATABASE_URL)
         try:
             query = """
             SELECT 
-                s.symbol,
+                s.stock_id,
                 h.date,
                 h.open,
                 h.high,
@@ -47,20 +47,24 @@ class StockDataset(Dataset):
                 h.close
             FROM stock_historical_data h
             JOIN stocks s ON h.stock_id = s.stock_id
-            ORDER BY h.date, s.symbol
+            ORDER BY h.date, s.stock_id
             """
             
             records = await conn.fetch(query)
             
             # Convert to DataFrame
-            df = pd.DataFrame(records, columns=['symbol', 'date', 'open', 'high', 
-                                             'low', 'close'])
+            df = pd.DataFrame(records, columns=['stock_id', 'date', 'open', 'high', 
+                                            'low', 'close'])
             
-            # Pivot to wide format
-            df = df.pivot(index='date', columns='symbol', 
-                         values=['open', 'high', 'low', 'close'])
+            # Pivot to wide format using stock_id
+            df = df.pivot(index='date', columns='stock_id', 
+                        values=['open', 'high', 'low', 'close'])
+            
+            # Flatten multi-index columns
             df.columns = [f"{col[1]}_{col[0]}" for col in df.columns]
+            
             return df.sort_index()
+            
         finally:
             await conn.close()
 
@@ -69,16 +73,8 @@ class StockDataset(Dataset):
         n_features = 4  # open, high, low, close
         n_stocks = len(self.data.columns) // n_features
         data_values = self.data.values
-        
         self.scaled_data = np.zeros((len(self.data), n_stocks, n_features))
-        
-        # Load or create scalers
-        if self.scalers_dir and os.path.exists(self.scalers_dir):
-            for i in range(n_stocks):
-                scaler_path = os.path.join(self.scalers_dir, f'scaler_{i}.pkl')
-                if os.path.exists(scaler_path):
-                    self.scalers[i] = joblib.load(scaler_path)
-        
+                
         for i in range(n_stocks):
             stock_data = data_values[:, i*n_features:(i+1)*n_features]
             if i not in self.scalers:
@@ -106,7 +102,10 @@ def get_dataloaders(sequence_length=30, batch_size=32, split_ratio=0.8):
     # Split dataset
     train_size = int(len(dataset) * split_ratio)
     val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    # Replace random_split with sequential indices
+    indices = torch.arange(len(dataset))  # Create ordered indices
+    train_dataset = torch.utils.data.Subset(dataset, indices[:train_size])
+    val_dataset = torch.utils.data.Subset(dataset, indices[train_size:])
     
     # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

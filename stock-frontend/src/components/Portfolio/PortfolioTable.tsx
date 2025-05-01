@@ -44,14 +44,18 @@ export default function PortfolioTable({ holdings }: Props) {
               <td className="px-6 py-4 whitespace-nowrap">
                 {numeral(holding.quantity * holding.currentPrice).format('$0,0.00')}
               </td>
-              <td className={`px-6 py-4 whitespace-nowrap ${getProfitColor(holding.profitPercentage)}`}>
+              <td className={`px-6 py-4 whitespace-nowrap ${getProfitColor(holding.profitPercentage || 0)}`}>
                 <div className="flex items-center">
-                    {holding.profitPercentage > 0 ? (
+                    {holding.profitPercentage && holding.profitPercentage > 0 ? (
                         <FiArrowUp className="w-4 h-4" />
                     ) : (
                         <FiArrowDown className="w-4 h-4" />
                     )}
-                  <span className="ml-1">{holding.profitPercentage.toFixed(2)}%</span>
+                  <span className="ml-1">
+                    {holding.profitPercentage !== undefined
+                      ? holding.profitPercentage.toFixed(2) + '%'
+                      : 'N/A'}
+                  </span>
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap space-x-2">

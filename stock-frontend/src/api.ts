@@ -50,7 +50,7 @@ export const fetchPortfolio = async (): Promise<StockHolding[]> => {
 }
 
 export const fetchPrediction = async (symbol: string): Promise<any> => {
-  const response = await api.get(`/predict/${symbol}`)
+  const response = await api.get(`/portfolio/predictions/${symbol}`)
   return response.data
 }
   

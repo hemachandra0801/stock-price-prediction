@@ -12,6 +12,7 @@ import asyncpg
 import os
 from dotenv import load_dotenv
 from fastapi import Request
+import httpx
 
 load_dotenv()
 
@@ -33,7 +34,7 @@ app = FastAPI()
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=["*"],  # Frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -350,33 +351,64 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
-@app.get("/portfolio", response_model=List[PortfolioItem])        ################### Changed it to PortfolioItem from StockHolding
+@app.get("/portfolio", response_model=List[PortfolioItem])
 async def get_portfolio(current_user: UserInDB = Depends(get_current_user)):
     try:
         db = await get_db()
-        
-        # Get user's portfolio with current prices
+
+        # holdings = await db.fetch('''
+        #     SELECT 
+        #         s.symbol,
+        #         s.company_name AS name,
+        #         COALESCE(p.quantity, 0) AS quantity,
+        #         COALESCE(p.avg_purchase_price, 0) AS avg_price,
+        #         h.close AS current_price,
+        #         COALESCE(p.quantity, 0) * h.close AS value,
+        #         COALESCE(p.quantity, 0) * h.close - COALESCE(p.quantity, 0) * COALESCE(p.avg_purchase_price, 0) AS profit,
+        #         CASE 
+        #             WHEN COALESCE(p.avg_purchase_price, 0) = 0 THEN 0
+        #             ELSE ((h.close - p.avg_purchase_price) / p.avg_purchase_price * 100)
+        #         END AS profit_percent
+        #     FROM stocks s
+        #     LEFT JOIN portfolios p ON p.stock_id = s.stock_id AND p.user_id = $1
+        #     LEFT JOIN (
+        #         SELECT DISTINCT ON (stock_id) stock_id, close
+        #         FROM stock_historical_data
+        #         ORDER BY stock_id, date DESC
+        #     ) h ON s.stock_id = h.stock_id
+        #     WHERE s.is_active = TRUE
+        # ''', current_user.user_id)
+
         holdings = await db.fetch('''
             SELECT 
                 s.symbol,
-                s.company_name as name,
-                p.quantity,
-                p.avg_purchase_price as avg_price,
-                h.close as current_price,
-                (p.quantity * h.close) as value,
-                (p.quantity * h.close - p.quantity * p.avg_purchase_price) as profit,
-                ((h.close - p.avg_purchase_price) / p.avg_purchase_price * 100) as profit_percent
+                s.company_name AS name,
+                p.quantity AS quantity,
+                p.avg_purchase_price AS avg_price,
+                h.close AS current_price,
+                ROUND(p.quantity * h.close, 2) AS value,
+                ROUND((h.close - p.avg_purchase_price) * p.quantity, 2) AS profit,
+                CASE 
+                    WHEN p.avg_purchase_price = 0 THEN 0
+                    ELSE ROUND(((h.close - p.avg_purchase_price) / p.avg_purchase_price * 100), 2)
+                END AS profit_percent
             FROM portfolios p
-            JOIN stocks s ON p.stock_id = s.stock_id
-            JOIN (
-                SELECT DISTINCT ON (stock_id) *
+            INNER JOIN stocks s ON p.stock_id = s.stock_id
+            LEFT JOIN LATERAL (
+                SELECT close
                 FROM stock_historical_data
-                ORDER BY stock_id, date DESC
-            ) h ON s.stock_id = h.stock_id
-            WHERE p.user_id = $1
+                WHERE stock_id = s.stock_id
+                ORDER BY date DESC
+                LIMIT 1
+            ) h ON true
+            WHERE 
+                p.user_id = $1
+                AND s.is_active = TRUE
+                AND p.quantity > 0
         ''', current_user.user_id)
         
-        return holdings
+        result = [PortfolioItem(**dict(record)) for record in holdings]
+        return result
         
     except Exception as e:
         logger.error(f"Portfolio error: {str(e)}")
@@ -473,15 +505,32 @@ async def get_predictions(
     try:
         # Replace with actual prediction logic
         prediction = None
-        return {
-            "symbol": symbol,
-            "predictions": {
-                "open": prediction.open,
-                "high": prediction.high,
-                "low": prediction.low,
-                "close": prediction.close
+        # return {
+        #     "symbol": symbol,    
+        #     "open": prediction.open,
+        #     "high": prediction.high,
+        #     "low": prediction.low,
+        #     "close": prediction.close
+        # }
+        try:
+            external_url = f"http://10.22.14.38:8000/predict/{symbol}"
+            async with httpx.AsyncClient() as client:
+                response = await client.get(external_url)
+
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail="Failed to fetch prediction")
+
+            data = response.json()
+            return {
+                "symbol": data["symbol"],
+                "open": data["open"],
+                "high": data["high"],
+                "low": data["low"],
+                "close": data["close"]
             }
-        }
+        except Exception as e:
+            logger.error(f"Prediction error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Prediction failed")
         
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}")

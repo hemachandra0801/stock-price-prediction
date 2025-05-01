@@ -1,0 +1,20 @@
+# Core Data Processing
+pandas==2.2.3
+numpy==2.2.5
+scikit-learn==1.6.1
+scipy==1.15.2
+
+# Database
+asyncpg==0.30.0
+python-dotenv==1.1.0
+
+# Deep Learning
+torch==2.7.0
+
+# Async/Web
+aiohttp==3.11.18
+asyncio==3.10.4
+
+# Utils
+joblib==1.4.2
+tqdm==4.67.1

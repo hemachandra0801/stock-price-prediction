@@ -33,9 +33,9 @@ stages:
       size: 2396
     - path: mlruns/models
       hash: md5
-      md5: 995f96992b8f5e85bc97424f1b595517.dir
-      size: 15880
-      nfiles: 30
+      md5: a9c8021db0e9b29e05f519407cb2e232.dir
+      size: 19326
+      nfiles: 36
     - path: model.py
       hash: md5
       md5: ac28bf1d62205e432f0eec9c02d7c572

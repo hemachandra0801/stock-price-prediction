@@ -89,7 +89,7 @@ run_experiment(
     training_config={
         'sequence_length': 30,
         'batch_size': 64,
-        'epochs': 5,
+        'epochs': 50,
         'lr': 0.001,
         'weight_decay': 1e-4,
         'model_path': 'models/baseline_lstm.pth'
@@ -110,7 +110,7 @@ run_experiment(
     training_config={
         'sequence_length': 30,
         'batch_size': 64,
-        'epochs': 5,
+        'epochs': 50,
         'lr': 0.001,
         'weight_decay': 1e-4,
         'model_path': 'models/deep_lstm.pth'

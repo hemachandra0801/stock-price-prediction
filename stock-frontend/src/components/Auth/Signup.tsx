@@ -16,6 +16,12 @@ export default function Signup() {
     try {
       await signup(data.email, data.password)
     } catch (error) {
+        // eslint-disable-next-line no-lone-blocks
+        {error && (
+          <div className="text-red-500 text-sm">
+            {typeof error === 'string' ? error : JSON.stringify(error)}
+          </div>
+        )}
       console.error('Signup failed')
     }
   }

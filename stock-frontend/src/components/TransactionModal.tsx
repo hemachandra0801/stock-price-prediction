@@ -19,7 +19,7 @@ export default function TransactionModal({ stock, actionType, onClose }: Props) 
       await dispatch(executeTrade({
         symbol: stock.symbol,
         action: actionType,
-        shares: sharesNumber,
+        quantity: sharesNumber,
         price: stock.currentPrice
       }))
       onClose()

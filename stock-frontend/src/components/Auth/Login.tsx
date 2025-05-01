@@ -99,7 +99,7 @@ export default function Login() {
           </button>
 
           <div className="text-center text-sm mt-6">
-            <span className="text-gray-600">New to Stockly? </span>
+            <span className="text-gray-600">Don't have an account? </span>
             <Link
               to="/signup"
               className="font-semibold text-purple-600 hover:text-purple-700 transition-colors"

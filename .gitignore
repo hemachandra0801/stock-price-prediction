@@ -1,3 +1,5 @@
 /stock-frontend/node_modules/
 
 .env
+
+combined_stocks_wide.csv

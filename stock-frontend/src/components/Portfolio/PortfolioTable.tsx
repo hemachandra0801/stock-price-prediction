@@ -37,12 +37,12 @@ export default function PortfolioTable({ holdings }: Props) {
                 <div className="font-medium text-gray-900">{holding.name}</div>
                 <div className="text-sm text-gray-500">{holding.symbol}</div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">{holding.shares}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{holding.quantity}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 {numeral(holding.currentPrice).format('$0,0.00')}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {numeral(holding.shares * holding.currentPrice).format('$0,0.00')}
+                {numeral(holding.quantity * holding.currentPrice).format('$0,0.00')}
               </td>
               <td className={`px-6 py-4 whitespace-nowrap ${getProfitColor(holding.profitPercentage)}`}>
                 <div className="flex items-center">

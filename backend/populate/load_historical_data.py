@@ -41,7 +41,8 @@ async def populate_stocks_and_history(csv_path):
             batch_size = 1000  # Adjust based on memory constraints
             
             for row in reader:
-                date = datetime.strptime(row['Date'], '%Y-%m-%d').date()
+                date_str = row['Date'].split(' ')[0]
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
                 
                 for symbol in symbols:
                     try:
@@ -86,4 +87,4 @@ async def populate_stocks_and_history(csv_path):
 
 if __name__ == '__main__':
     import asyncio
-    asyncio.run(populate_stocks_and_history('your_historical_data.csv'))
+    asyncio.run(populate_stocks_and_history('combined_stocks_wide.csv'))

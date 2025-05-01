@@ -12,5 +12,5 @@ CREATE INDEX idx_historical_stock_date ON stock_historical_data(stock_id, date);
 -- Transactions
 CREATE INDEX idx_transactions_user_date ON transactions(user_id, transaction_time);
 
-CREATE EXTENSION pgcrypto; -- For password hashing
-CREATE EXTENSION timescaledb; -- For time-series optimization
+-- CREATE EXTENSION pgcrypto; -- For password hashing
+-- CREATE EXTENSION timescaledb; -- For time-series optimization
